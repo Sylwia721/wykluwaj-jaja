@@ -6,6 +6,7 @@ using System.Windows;
 using WykluwajJaja.Commands;
 using WykluwajJaja.Models;
 using WykluwajJaja.Services;
+using WykluwajJaja.Views;
 
 namespace WykluwajJaja.ViewModels;
 
@@ -241,11 +242,10 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        MessageBoxResult wynik = MessageBox.Show(
-            $"Czy na pewno usunąć poziom \"{WybranyPoziom.Nazwa}\"?",
-            "Potwierdzenie usunięcia", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        bool potwierdzone = OknoPotwierdzenia.Potwierdz(
+            $"Czy na pewno usunąć poziom \"{WybranyPoziom.Nazwa}\"?");
 
-        if (wynik == MessageBoxResult.Yes)
+        if (potwierdzone)
         {
             PoziomyTrudnosci.Remove(WybranyPoziom);
             WybranyPoziom = PoziomyTrudnosci.FirstOrDefault();
@@ -285,11 +285,10 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        MessageBoxResult decyzja = MessageBox.Show(
-            $"Czy na pewno usunąć wynik z poziomu \"{WybranyWynik.Poziom}\"?",
-            "Potwierdzenie usunięcia", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        bool potwierdzone = OknoPotwierdzenia.Potwierdz(
+            $"Czy na pewno usunąć wynik z poziomu \"{WybranyWynik.Poziom}\"?");
 
-        if (decyzja == MessageBoxResult.Yes)
+        if (potwierdzone)
         {
             Wyniki.Remove(WybranyWynik);
             WybranyWynik = null;
