@@ -2,16 +2,20 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Poziomy trudności"
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Poziomy trudności"
                    FontSize="24" FontWeight="Bold" Margin="0,0,0,10" />
 
-        <ListBox Grid.Row="1" ItemsSource="{Binding PoziomyTrudnosci}"
+        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding PoziomyTrudnosci}"
                  SelectedItem="{Binding WybranyPoziom}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -24,7 +28,20 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <TextBlock Grid.Row="2" Margin="0,10,0,0" FontSize="16">
+        <StackPanel Grid.Row="1" Grid.Column="1" Width="220" Margin="15,0,0,0">
+            <TextBlock Text="Nazwa:" />
+            <TextBox Text="{Binding NazwaPoziomu, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,2,0,10" />
+            <TextBlock Text="Liczba kliknięć:" />
+            <TextBox Text="{Binding LiczbaKlikniecTekst, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,2,0,10" />
+            <Button Content="Dodaj nowy" Command="{Binding DodajCommand}" Margin="0,0,0,6" />
+            <Button Content="Zapisz zmiany" Command="{Binding ZapiszZmianyCommand}" Margin="0,0,0,6" />
+            <Button Content="Usuń" Command="{Binding UsunCommand}" Margin="0,0,0,6" />
+            <Button Content="Zapisz do pliku" Command="{Binding ZapiszCommand}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0" FontSize="16">
             <Run Text="Wybrany poziom:" />
             <Run Text="{Binding WybranyPoziom.Nazwa, Mode=OneWay}" FontWeight="Bold" />
         </TextBlock>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using WykluwajJaja.Commands;
 using WykluwajJaja.Models;
@@ -19,6 +20,8 @@ public class MainViewModel : ViewModelBase
     private bool _graTrwa;
     private int _liczbaKlikniec;
     private DateTime _czasStartu;
+    private string _nazwaPoziomu = string.Empty;
+    private string _liczbaKlikniecTekst = string.Empty;
 
     public ObservableCollection<PoziomTrudnosci> PoziomyTrudnosci { get; } = new();
     public ObservableCollection<Wynik> Wyniki { get; } = new();
@@ -27,11 +30,19 @@ public class MainViewModel : ViewModelBase
 
     public RelayCommand ZagrajCommand { get; }
     public RelayCommand KliknijCommand { get; }
+    public RelayCommand DodajCommand { get; }
+    public RelayCommand ZapiszZmianyCommand { get; }
+    public RelayCommand UsunCommand { get; }
+    public RelayCommand ZapiszCommand { get; }
 
     public MainViewModel()
     {
         ZagrajCommand = new RelayCommand(Zagraj, () => WybranyPoziom is not null && !GraTrwa);
         KliknijCommand = new RelayCommand(Kliknij, () => GraTrwa);
+        DodajCommand = new RelayCommand(Dodaj);
+        ZapiszZmianyCommand = new RelayCommand(ZapiszZmiany);
+        UsunCommand = new RelayCommand(Usun);
+        ZapiszCommand = new RelayCommand(ZapiszPoziomy);
 
         WczytajPoziomy();
     }
@@ -44,7 +55,25 @@ public class MainViewModel : ViewModelBase
             _wybranyPoziom = value;
             OnPropertyChanged();
             ZagrajCommand.RaiseCanExecuteChanged();
+
+            if (value is not null)
+            {
+                NazwaPoziomu = value.Nazwa;
+                LiczbaKlikniecTekst = value.LiczbaKlikniec.ToString();
+            }
         }
+    }
+
+    public string NazwaPoziomu
+    {
+        get => _nazwaPoziomu;
+        set { _nazwaPoziomu = value; OnPropertyChanged(); }
+    }
+
+    public string LiczbaKlikniecTekst
+    {
+        get => _liczbaKlikniecTekst;
+        set { _liczbaKlikniecTekst = value; OnPropertyChanged(); }
     }
 
     public string Zdjecie
@@ -117,6 +146,77 @@ public class MainViewModel : ViewModelBase
         {
             MessageBox.Show($"Nie udało się zapisać poziomów trudności.\n{ex.Message}",
                 "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private bool Waliduj(out int liczba)
+    {
+        liczba = 0;
+
+        if (string.IsNullOrWhiteSpace(NazwaPoziomu))
+        {
+            MessageBox.Show("Nazwa poziomu nie może być pusta.", "Błąd walidacji",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        if (!int.TryParse(LiczbaKlikniecTekst, out liczba) || liczba <= 0)
+        {
+            MessageBox.Show("Liczba kliknięć musi być liczbą większą od 0.", "Błąd walidacji",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void Dodaj()
+    {
+        if (!Waliduj(out int liczba))
+        {
+            return;
+        }
+
+        PoziomTrudnosci poziom = new() { Nazwa = NazwaPoziomu, LiczbaKlikniec = liczba };
+        PoziomyTrudnosci.Add(poziom);
+        WybranyPoziom = poziom;
+    }
+
+    private void ZapiszZmiany()
+    {
+        if (WybranyPoziom is null)
+        {
+            MessageBox.Show("Najpierw zaznacz poziom na liście.", "Informacja",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (!Waliduj(out int liczba))
+        {
+            return;
+        }
+
+        WybranyPoziom.Nazwa = NazwaPoziomu;
+        WybranyPoziom.LiczbaKlikniec = liczba;
+    }
+
+    private void Usun()
+    {
+        if (WybranyPoziom is null)
+        {
+            MessageBox.Show("Najpierw zaznacz poziom na liście.", "Informacja",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        MessageBoxResult wynik = MessageBox.Show(
+            $"Czy na pewno usunąć poziom \"{WybranyPoziom.Nazwa}\"?",
+            "Potwierdzenie usunięcia", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (wynik == MessageBoxResult.Yes)
+        {
+            PoziomyTrudnosci.Remove(WybranyPoziom);
+            WybranyPoziom = PoziomyTrudnosci.FirstOrDefault();
         }
     }
 
