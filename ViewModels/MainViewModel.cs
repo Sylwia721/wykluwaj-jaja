@@ -22,9 +22,15 @@ public class MainViewModel : ViewModelBase
     private DateTime _czasStartu;
     private string _nazwaPoziomu = string.Empty;
     private string _liczbaKlikniecTekst = string.Empty;
+    private Wynik? _wybranyWynik;
+    private string _filtr = string.Empty;
+    private string _poleSortowania = "Data";
+    private bool _malejaco;
 
     public ObservableCollection<PoziomTrudnosci> PoziomyTrudnosci { get; } = new();
     public ObservableCollection<Wynik> Wyniki { get; } = new();
+    public ObservableCollection<Wynik> WynikiWidoczne { get; } = new();
+    public List<string> PolaSortowania { get; } = new() { "Data", "Poziom", "Kliknięcia", "Czas" };
 
     public string Zwierze { get; } = Zasob("zwierze.png");
 
@@ -34,6 +40,7 @@ public class MainViewModel : ViewModelBase
     public RelayCommand ZapiszZmianyCommand { get; }
     public RelayCommand UsunCommand { get; }
     public RelayCommand ZapiszCommand { get; }
+    public RelayCommand UsunWynikCommand { get; }
 
     public MainViewModel()
     {
@@ -43,6 +50,7 @@ public class MainViewModel : ViewModelBase
         ZapiszZmianyCommand = new RelayCommand(ZapiszZmiany);
         UsunCommand = new RelayCommand(Usun);
         ZapiszCommand = new RelayCommand(ZapiszPoziomy);
+        UsunWynikCommand = new RelayCommand(UsunWynik);
 
         WczytajPoziomy();
     }
@@ -74,6 +82,30 @@ public class MainViewModel : ViewModelBase
     {
         get => _liczbaKlikniecTekst;
         set { _liczbaKlikniecTekst = value; OnPropertyChanged(); }
+    }
+
+    public Wynik? WybranyWynik
+    {
+        get => _wybranyWynik;
+        set { _wybranyWynik = value; OnPropertyChanged(); }
+    }
+
+    public string Filtr
+    {
+        get => _filtr;
+        set { _filtr = value; OnPropertyChanged(); OdswiezWyniki(); }
+    }
+
+    public string PoleSortowania
+    {
+        get => _poleSortowania;
+        set { _poleSortowania = value; OnPropertyChanged(); OdswiezWyniki(); }
+    }
+
+    public bool Malejaco
+    {
+        get => _malejaco;
+        set { _malejaco = value; OnPropertyChanged(); OdswiezWyniki(); }
     }
 
     public string Zdjecie
@@ -220,6 +252,51 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    private void OdswiezWyniki()
+    {
+        IEnumerable<Wynik> wyniki = Wyniki;
+
+        if (!string.IsNullOrWhiteSpace(Filtr))
+        {
+            wyniki = wyniki.Where(w => w.Poziom.Contains(Filtr, StringComparison.OrdinalIgnoreCase));
+        }
+
+        wyniki = PoleSortowania switch
+        {
+            "Poziom" => Malejaco ? wyniki.OrderByDescending(w => w.Poziom) : wyniki.OrderBy(w => w.Poziom),
+            "Kliknięcia" => Malejaco ? wyniki.OrderByDescending(w => w.LiczbaKlikniec) : wyniki.OrderBy(w => w.LiczbaKlikniec),
+            "Czas" => Malejaco ? wyniki.OrderByDescending(w => w.Czas) : wyniki.OrderBy(w => w.Czas),
+            _ => Malejaco ? wyniki.OrderByDescending(w => w.Data) : wyniki.OrderBy(w => w.Data)
+        };
+
+        WynikiWidoczne.Clear();
+        foreach (Wynik wynik in wyniki)
+        {
+            WynikiWidoczne.Add(wynik);
+        }
+    }
+
+    private void UsunWynik()
+    {
+        if (WybranyWynik is null)
+        {
+            MessageBox.Show("Najpierw zaznacz wynik na liście.", "Informacja",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        MessageBoxResult decyzja = MessageBox.Show(
+            $"Czy na pewno usunąć wynik z poziomu \"{WybranyWynik.Poziom}\"?",
+            "Potwierdzenie usunięcia", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (decyzja == MessageBoxResult.Yes)
+        {
+            Wyniki.Remove(WybranyWynik);
+            WybranyWynik = null;
+            OdswiezWyniki();
+        }
+    }
+
     private void Zagraj()
     {
         if (WybranyPoziom is null)
@@ -290,6 +367,8 @@ public class MainViewModel : ViewModelBase
             LiczbaKlikniec = _liczbaKlikniec,
             Czas = DateTime.Now - _czasStartu
         });
+
+        OdswiezWyniki();
 
         ZagrajCommand.RaiseCanExecuteChanged();
         KliknijCommand.RaiseCanExecuteChanged();

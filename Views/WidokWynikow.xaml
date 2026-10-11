@@ -1,10 +1,39 @@
 <UserControl x:Class="WykluwajJaja.Views.WidokWynikow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
-        <TextBlock Text="Wyniki - w przygotowaniu"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="20" />
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Wyniki" FontSize="24" FontWeight="Bold" Margin="0,0,0,10" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Szukaj poziomu:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox Text="{Binding Filtr, UpdateSourceTrigger=PropertyChanged}" Width="160" />
+            <TextBlock Text="Sortuj:" VerticalAlignment="Center" Margin="16,0,6,0" />
+            <ComboBox ItemsSource="{Binding PolaSortowania}"
+                      SelectedItem="{Binding PoleSortowania}" Width="120" />
+            <CheckBox Content="Malejąco" IsChecked="{Binding Malejaco}"
+                      VerticalAlignment="Center" Margin="16,0,0,0" />
+        </StackPanel>
+
+        <ListView Grid.Row="2" ItemsSource="{Binding WynikiWidoczne}"
+                  SelectedItem="{Binding WybranyWynik}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Data" Width="160" DisplayMemberBinding="{Binding Data}" />
+                    <GridViewColumn Header="Poziom" Width="140" DisplayMemberBinding="{Binding Poziom}" />
+                    <GridViewColumn Header="Kliknięcia" Width="100" DisplayMemberBinding="{Binding LiczbaKlikniec}" />
+                    <GridViewColumn Header="Czas" Width="100" DisplayMemberBinding="{Binding Czas}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <Button Grid.Row="3" Content="Usuń zaznaczony" Command="{Binding UsunWynikCommand}"
+                HorizontalAlignment="Left" Margin="0,10,0,0" />
     </Grid>
 </UserControl>
